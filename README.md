@@ -1,23 +1,74 @@
 # macbook-dev-setup
 
+[![Validate workstation setup](https://github.com/rayzorinc/macbook-dev-setup/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/rayzorinc/macbook-dev-setup/actions/workflows/validate.yml)
+
 Provision a current macOS laptop with SRE and developer tools.
 It installs Apple Command Line Tools, Homebrew, Ansible, and a curated set of
 current Homebrew formulae and casks.
 
 ## What it installs
 
-- Core: Ansible, AWS CLI, current Bash, Git, GitHub CLI, current Go and Python,
-  `ag`, `htop`, `jq`, `yq`, `ripgrep`, and `tmux`.
-- SRE: Argo CD, EKS authentication and tooling, Fastly CLI, herdr, Kubernetes
-  CLI tools, Helm, Podman, Terraform and related utilities, Packer, Vault,
-  SOPS, and the `vegeta` and `wrk` HTTP load-testing tools.
-- Applications: Codex, Discord, Ghostty, Google Chrome, Slack, Spotify, and
-  VLC.
+Bootstrap installs Apple Command Line Tools, Homebrew, Ansible, and the
+`community.general` Ansible collection. The playbook then installs the
+following current Homebrew packages.
+
+### Core command-line tools
+
+- `ansible`, `ansible-lint`, `awscli`, `bash`, `bash-completion@2`, `curl`,
+  `git`, `gh`, `go`, `gopls`, `htop`, `jq`
+- `python`, `ripgrep`, `ruby`, `the_silver_searcher` (`ag`), `tmux`,
+  `virtualenv`, `vim`, `yq`
+
+### SRE, cloud, and infrastructure tools
+
+- `argocd`, `aws-iam-authenticator`, `eksctl`, `helm`, `herdr`, `packer`,
+  `podman`, `sops`, `vault`
+- Kubernetes: `kubernetes-cli` (`kubectl`), `kustomize`, `kubectx`, `kubent`,
+  `kubeconform`
+- Terraform: `terraform`, `terraform-docs`, `terraformer`, `terragrunt`,
+  `terraform-ls`, `tfenv`
+- Fastly CLI: `fastly/tap/fastly`
+- HTTP load testing: `vegeta`, `wrk`
+
+### Applications
+
+- `codex`, `discord`, `ghostty`, `google-chrome`, `slack`, `spotify`, `vlc`
+
+### Homebrew taps
+
+- `fastly/tap`, `hashicorp/tap`
 
 The formula names `go`, `python`, and `terraform` intentionally track the
 current Homebrew releases rather than pinning an old workstation image.
 Homebrew Bash is installed alongside macOS's system Bash; the setup does not
 change a user's login shell.
+
+Python's standard-library `venv` module is verified by the playbook, and the
+standalone `virtualenv` command is installed. Create a project virtual
+environment with `python3 -m venv .venv` or `virtualenv .venv`.
+
+## Bash-it and Bash completions
+
+The playbook installs `bash-completion@2`, links completion definitions exposed
+by Homebrew commands, and clones Bash-it. It adds clearly marked, idempotent
+blocks to `~/.bashrc` and `~/.bash_profile`; these load Homebrew completions and
+Bash-it only in interactive Bash shells. Existing dotfile content is retained.
+
+Open a new Bash shell after provisioning, or run `source ~/.bashrc`.
+
+## Vim tooling
+
+The playbook installs Vim and native Vim packages for ALE diagnostics and
+completion, Ansible, FZF, NERDTree, snippets, easy alignment, Go, Ruby, and
+Terraform. It also installs the matching external tools used by those plugins:
+`ansible-lint`, `gopls`, and `terraform-ls`; Ruby syntax checking uses the
+installed Ruby interpreter.
+
+The plugins are cloned into `~/.vim/pack/macbook-dev-setup/start`, and the
+playbook adds a clearly marked ALE configuration block under
+`~/.vim/after/plugin`. It does not modify an existing Vim-Plug plugin list or
+copy private/local plugins. Codex has no additional Vim plugin configured; its
+Bash completion is generated through the managed Bash completion setup.
 
 ## Install
 
@@ -36,6 +87,19 @@ To preview Ansible changes after bootstrap:
 ```bash
 ansible-playbook -i localhost, playbook.yml --check
 ```
+
+## Safe reruns
+
+It is safe to rerun `./bootstrap.sh`. The setup converges on the declared tool
+list: it installs missing packages but does not upgrade already installed
+formulae or casks. Homebrew metadata may be refreshed on each run.
+
+Existing content in `~/.bashrc`, `~/.bash_profile`, and Vim configuration is
+preserved. The playbook only maintains its own clearly marked Bash-it,
+completion, and Vim tooling blocks. Changes outside those markers remain
+untouched; edits inside a managed block are restored to the repository-defined
+configuration on the next run. Bash-it and Vim plugin checkouts are not updated
+or reset during reruns.
 
 ## Podman on macOS
 
@@ -67,8 +131,10 @@ employer-specific configuration. It does not copy or configure:
 
 - AWS profiles, SSO sessions, access keys, or `aws-vault` data
 - Kubernetes contexts, cluster credentials, or VPN configuration
-- SSH keys, Git user name/email, shell history, or dotfiles
-- Private Homebrew taps, corporate packages, or tools such as Kraken
+- SSH keys, Git user name/email, or shell history
+- Existing dotfile content; the only managed shell changes are the clearly
+  marked Bash-it, completion, and Vim tooling blocks
+- Private Homebrew taps or corporate packages
 
 After provisioning, authenticate each tool through the approved identity and
 secrets workflow for the environment you are joining.
