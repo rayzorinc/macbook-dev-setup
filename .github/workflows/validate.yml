@@ -1,0 +1,35 @@
+name: Validate workstation setup
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check bootstrap shell syntax
+        run: bash -n bootstrap.sh
+
+      - name: Install Ansible
+        run: python3 -m pip install --user ansible
+
+      - name: Install required Ansible collections
+        run: ~/.local/bin/ansible-galaxy collection install -r requirements.yml
+
+      - name: Check Ansible syntax
+        run: ~/.local/bin/ansible-playbook --syntax-check -i localhost, playbook.yml
+
+      - name: Enforce repository exclusions
+        run: |
+          if rg --ignore-case --glob '!README.md' \
+            'giphy/tap|kraken|aws_access_key|aws_secret|private key|ssh-rsa' .; then
+            echo 'Blocked corporate tooling or credential material found.' >&2
+            exit 1
+          fi

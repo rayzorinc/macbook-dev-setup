@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.env.*
+*.pem
+*.key
+*.tfvars
+*.tfstate
+*.tfstate.*
+secrets/
+vault-password*

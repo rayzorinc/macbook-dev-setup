@@ -1,0 +1,55 @@
+---
+# This list deliberately contains only company-neutral tooling. Keep credentials,
+# VPN clients, private package taps, and employer-specific tools out of this file.
+homebrew_taps:
+  - fastly/tap
+  - hashicorp/tap
+
+homebrew_formulae_core:
+  - ansible
+  - awscli
+  - bash
+  - curl
+  - git
+  - gh
+  - go
+  - htop
+  - jq
+  - python
+  - ripgrep
+  - the_silver_searcher
+  - tmux
+  - yq
+
+homebrew_formulae_sre:
+  - argocd
+  - aws-iam-authenticator
+  - eksctl
+  - fastly/tap/fastly
+  - helm
+  - herdr
+  - kubeconform
+  - kubectx
+  - kubent
+  - kubernetes-cli
+  - kustomize
+  - packer
+  - podman
+  - sops
+  - terraform
+  - terraform-docs
+  - terragrunt
+  - vault
+  - vegeta
+  - wrk
+
+homebrew_casks:
+  - codex
+  - discord
+  - ghostty
+  - google-chrome
+  - slack
+  - spotify
+  - vlc
+
+homebrew_formulae: "{{ homebrew_formulae_core + homebrew_formulae_sre }}"

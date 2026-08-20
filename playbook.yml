@@ -1,0 +1,44 @@
+---
+- name: Provision a macOS SRE workstation
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: false
+  vars_files:
+    - group_vars/all.yml
+
+  pre_tasks:
+    - name: Require macOS
+      ansible.builtin.assert:
+        that: ansible_facts.system == 'Darwin'
+        fail_msg: This playbook is intended for macOS only.
+
+    - name: Verify that Homebrew is available
+      ansible.builtin.command: brew --version
+      changed_when: false
+
+  tasks:
+    - name: Add required Homebrew taps
+      community.general.homebrew_tap:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ homebrew_taps }}"
+
+    - name: Install current core and SRE formulae
+      community.general.homebrew:
+        name: "{{ homebrew_formulae }}"
+        state: present
+        update_homebrew: true
+
+    - name: Install workstation applications
+      community.general.homebrew_cask:
+        name: "{{ homebrew_casks }}"
+        state: present
+
+  post_tasks:
+    - name: Show manual credential setup reminder
+      ansible.builtin.debug:
+        msg: >-
+          Tool installation is complete. Configure AWS SSO, Kubernetes contexts,
+          Git identity, SSH keys, and any VPN separately; this repository never
+          manages credentials or employer-specific settings.
