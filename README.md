@@ -8,9 +8,13 @@ current Homebrew formulae and casks.
 
 ## What it installs
 
-Bootstrap installs Apple Command Line Tools, Homebrew, Ansible, and the
-`community.general` Ansible collection. The playbook then installs the
-following current Homebrew packages.
+Bootstrap installs Apple Command Line Tools, Homebrew, Xcode, Ansible, and the
+`community.general` Ansible collection—in that order. Xcode is installed and
+selected through `xcodes` after Homebrew is available. Intel Macs install Xcode
+26.3, the newest release compatible with macOS 15.8; Apple Silicon Macs install
+the latest Xcode release. Xcodes prompts for an Apple ID and any required
+two-factor code, storing its authenticated session in the macOS Keychain. The
+playbook then installs the following current Homebrew packages.
 
 ### Core command-line tools
 
@@ -78,9 +82,54 @@ cd macbook-dev-setup
 ./bootstrap.sh
 ```
 
-The script may open Apple's Command Line Tools installer on a fresh Mac. When
-that completes, rerun it. Homebrew may also require its standard post-install
-PATH instruction before a rerun.
+The script supports both Intel and Apple Silicon Macs. It automatically loads
+Homebrew from `/usr/local` on Intel or `/opt/homebrew` on Apple Silicon, so a
+fresh Homebrew install can continue without opening a new shell. The script
+may open Apple's Command Line Tools installer on a fresh Mac; when that
+completes, rerun it.
+
+On Macs with Command Line Tools already installed, bootstrap checks Apple
+Software Update for a newer Command Line Tools package and installs that
+package only. It never removes the existing tools or installs unrelated system
+updates. If Software Update does not offer the requested version, download its
+package from [Apple Developer Downloads](https://developer.apple.com/download/all/)
+instead. `xcode-select --install` also uses Apple's Software Update channel,
+so it cannot install a specific newer Xcode release that Apple does not offer
+there.
+
+The Xcode installation needs administrator approval to select the installed
+developer directory and complete Apple’s first-launch setup. Existing Xcode
+26.3 installations in `/Applications` are reused on Intel safe reruns. Apple
+Silicon bootstrap runs check for the latest Xcode release on every rerun and
+selects the highest installed Xcode version. Apple Silicon Macs need a macOS
+version supported by the latest Xcode release.
+
+Homebrew no longer provides Intel bottles for `xcodes`, which would otherwise
+make it build from source before Xcode exists. On Intel, bootstrap therefore
+downloads Xcodes 2.1.0 from its official GitHub release, verifies its pinned
+SHA-256 checksum, and installs the verified universal executable into
+Homebrew's `bin` directory. Download `Xcode_26.3_Universal.xip` from Apple
+Developer Downloads while authenticated. If `XCODE_XIP_PATH` is not set,
+bootstrap opens the official Apple download page in the default browser. Once
+the download completes, bootstrap automatically uses
+`~/Downloads/Xcode_26.3_Universal.xip`. Rerun it normally:
+
+```bash
+./bootstrap.sh
+```
+
+Set `XCODE_XIP_PATH` only when the archive is elsewhere.
+
+Bootstrap gives that exact archive to Xcodes and verifies that the installed
+app contains an Intel executable before selecting it. Apple Silicon continues
+to install Xcodes through Homebrew and download the latest Xcode release.
+
+Homebrew classifies Intel macOS as Tier 3: it does not provide new Intel
+bottles, so some packages may build from source and can fail. Homebrew's
+current installer no longer bootstraps new Intel installations; for Intel only,
+this script uses the immutable upstream installer revision immediately before
+that change to install the current Homebrew checkout. Apple Silicon continues
+to use Homebrew's current installer.
 
 To preview Ansible changes after bootstrap:
 
