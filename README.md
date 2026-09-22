@@ -102,7 +102,11 @@ developer directory and complete Apple’s first-launch setup. Existing Xcode
 26.3 installations in `/Applications` are reused on Intel safe reruns. Apple
 Silicon bootstrap runs check for the latest Xcode release on every rerun and
 selects the highest installed Xcode version. Apple Silicon Macs need a macOS
-version supported by the latest Xcode release.
+version supported by the latest Xcode release. On Intel macOS 15, Homebrew also
+requires the standalone Command Line Tools directory even when full Xcode is
+installed; do not remove `/Library/Developer/CommandLineTools`. If it is
+missing, bootstrap opens the [Command Line Tools for Xcode 26.3 download](https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_26.3/Command_Line_Tools_for_Xcode_26.3.dmg).
+Install the downloaded package, then rerun bootstrap.
 
 Homebrew no longer provides Intel bottles for `xcodes`, which would otherwise
 make it build from source before Xcode exists. On Intel, bootstrap therefore

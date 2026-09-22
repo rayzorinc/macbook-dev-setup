@@ -31,6 +31,7 @@ xcodes_version="2.1.0"
 xcodes_release_url="https://github.com/XcodesOrg/xcodes/releases/download/${xcodes_version}/xcodes.zip"
 xcodes_release_sha256="f1519afe934a513e85dd9b32fc872394becbbb6a41db15d9ac3926a09a891888"
 xcode_intel_download_url="https://developer.apple.com/services-account/download?path=/Developer_Tools/Xcode_26.3/Xcode_26.3_Universal.xip"
+command_line_tools_download_url="https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_26.3/Command_Line_Tools_for_Xcode_26.3.dmg"
 
 case "$(uname -m)" in
   arm64)
@@ -229,6 +230,14 @@ load_homebrew() {
 if ! xcode-select -p >/dev/null 2>&1; then
   echo "Installing Apple's Command Line Tools. Complete the macOS prompt, then rerun this script."
   xcode-select --install
+  exit 0
+fi
+
+if [[ ! -x "/Library/Developer/CommandLineTools/usr/bin/clang" ]]; then
+  echo "Homebrew requires Apple's standalone Command Line Tools on this macOS configuration." >&2
+  echo "Opening the Command Line Tools for Xcode 26.3 download page." >&2
+  open "${command_line_tools_download_url}"
+  echo "Install the downloaded package, then rerun this script." >&2
   exit 0
 fi
 
