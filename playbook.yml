@@ -35,7 +35,88 @@
         name: "{{ homebrew_casks }}"
         state: present
 
+    - name: Link completion scripts provided by Homebrew commands
+      ansible.builtin.command: brew completions link
+      changed_when: false
+
+    - name: Install Bash-it without overwriting shell configuration
+      ansible.builtin.git:
+        repo: "{{ bash_it_repository }}"
+        dest: "{{ bash_it_path }}"
+        version: master
+        depth: 1
+        update: false
+
+    - name: Enable Bash-it and Homebrew completions for interactive Bash
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_env.HOME }}/.bashrc"
+        create: true
+        marker: "# {mark} macbook-dev-setup: Bash-it and Homebrew completions"
+        block: |
+          if [[ $- == *i* && -z "${MACBOOK_DEV_SETUP_BASH_INITIALIZED:-}" ]]; then
+            export MACBOOK_DEV_SETUP_BASH_INITIALIZED=1
+            if command -v brew >/dev/null 2>&1; then
+              HOMEBREW_PREFIX="$(brew --prefix)"
+              if [[ -r "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh" ]]; then
+                source "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh"
+              fi
+            fi
+            if [[ -r "${HOME}/.bash_it/bash_it.sh" ]]; then
+              export BASH_IT="${HOME}/.bash_it"
+              source "${BASH_IT}/bash_it.sh"
+            fi
+            if command -v codex >/dev/null 2>&1 && ! complete -p codex >/dev/null 2>&1; then
+              source <(codex completion bash)
+            fi
+          fi
+
+    - name: Source Bash configuration from interactive login shells
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_env.HOME }}/.bash_profile"
+        create: true
+        marker: "# {mark} macbook-dev-setup: source Bash configuration"
+        block: |
+          if [[ $- == *i* && -r "${HOME}/.bashrc" ]]; then
+            source "${HOME}/.bashrc"
+          fi
+
+    - name: Create the managed Vim native-package directory
+      ansible.builtin.file:
+        path: "{{ vim_plugin_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Install managed Vim plugins
+      ansible.builtin.git:
+        repo: "{{ item.repository }}"
+        dest: "{{ vim_plugin_path }}/{{ item.name }}"
+        version: master
+        depth: 1
+        update: false
+      loop: "{{ vim_plugins }}"
+
+    - name: Create the managed Vim configuration directory
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.vim/after/plugin"
+        state: directory
+        mode: '0755'
+
+    - name: Configure managed Vim language support
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_env.HOME }}/.vim/after/plugin/macbook-dev-setup.vim"
+        create: true
+        marker: '" {mark} macbook-dev-setup: Vim tooling'
+        block: |
+          filetype plugin indent on
+          syntax enable
+          let g:ale_completion_enabled = 1
+          let g:ale_completion_autoimport = 1
+
   post_tasks:
+    - name: Verify Python virtual-environment support
+      ansible.builtin.command: python3 -c 'import venv'
+      changed_when: false
+
     - name: Show manual credential setup reminder
       ansible.builtin.debug:
         msg: >-

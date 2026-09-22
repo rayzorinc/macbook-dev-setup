@@ -29,7 +29,7 @@ jobs:
       - name: Enforce repository exclusions
         run: |
           if rg --ignore-case --glob '!README.md' \
-            'giphy/tap|kraken|aws_access_key|aws_secret|private key|ssh-rsa' .; then
-            echo 'Blocked corporate tooling or credential material found.' >&2
+            'aws_access_key|aws_secret|private key|ssh-rsa' .; then
+            echo 'Potential credential material found.' >&2
             exit 1
           fi

@@ -7,18 +7,24 @@ homebrew_taps:
 
 homebrew_formulae_core:
   - ansible
+  - ansible-lint
   - awscli
   - bash
+  - bash-completion@2
   - curl
   - git
   - gh
   - go
+  - gopls
   - htop
   - jq
   - python
   - ripgrep
+  - ruby
   - the_silver_searcher
   - tmux
+  - virtualenv
+  - vim
   - yq
 
 homebrew_formulae_sre:
@@ -38,7 +44,10 @@ homebrew_formulae_sre:
   - sops
   - terraform
   - terraform-docs
+  - terraform-ls
+  - terraformer
   - terragrunt
+  - tfenv
   - vault
   - vegeta
   - wrk
@@ -53,3 +62,29 @@ homebrew_casks:
   - vlc
 
 homebrew_formulae: "{{ homebrew_formulae_core + homebrew_formulae_sre }}"
+
+bash_it_repository: https://github.com/Bash-it/bash-it.git
+bash_it_path: "{{ ansible_env.HOME }}/.bash_it"
+
+vim_plugin_path: "{{ ansible_env.HOME }}/.vim/pack/macbook-dev-setup/start"
+vim_plugins:
+  - name: ale
+    repository: https://github.com/dense-analysis/ale.git
+  - name: ansible-vim
+    repository: https://github.com/pearofducks/ansible-vim.git
+  - name: fzf-vim
+    repository: https://github.com/junegunn/fzf.vim.git
+  - name: nerdtree
+    repository: https://github.com/preservim/nerdtree.git
+  - name: ultisnips
+    repository: https://github.com/SirVer/ultisnips.git
+  - name: vim-easy-align
+    repository: https://github.com/junegunn/vim-easy-align.git
+  - name: vim-go
+    repository: https://github.com/fatih/vim-go.git
+  - name: vim-ruby
+    repository: https://github.com/vim-ruby/vim-ruby.git
+  - name: vim-snippets
+    repository: https://github.com/honza/vim-snippets.git
+  - name: vim-terraform
+    repository: https://github.com/hashivim/vim-terraform.git
