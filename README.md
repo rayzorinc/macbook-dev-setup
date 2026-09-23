@@ -42,6 +42,10 @@ playbook then installs the following current Homebrew packages.
 
 - `fastly/tap`, `hashicorp/tap`
 
+Homebrew 7 requires explicit trust before it loads formulae from third-party
+taps. The playbook trusts only these declared taps before installing their
+formulae; other taps remain untrusted.
+
 The formula names `go`, `python`, and `terraform` intentionally track the
 current Homebrew releases rather than pinning an old workstation image.
 Homebrew Bash is installed alongside macOS's system Bash; the setup does not

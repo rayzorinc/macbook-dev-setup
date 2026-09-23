@@ -24,6 +24,25 @@
         state: present
       loop: "{{ homebrew_taps }}"
 
+    - name: Read trusted Homebrew taps
+      ansible.builtin.command:
+        argv:
+          - brew
+          - trust
+          - --json=v1
+      register: homebrew_trust_state
+      changed_when: false
+
+    - name: Trust required third-party Homebrew taps
+      ansible.builtin.command:
+        argv:
+          - brew
+          - trust
+          - --tap
+          - "{{ item }}"
+      loop: "{{ homebrew_taps }}"
+      when: item not in ((homebrew_trust_state.stdout | from_json).taps | default([]))
+
     - name: Install current core and SRE formulae
       community.general.homebrew:
         name: "{{ homebrew_formulae }}"
