@@ -17,6 +17,12 @@
       ansible.builtin.command: brew --version
       changed_when: false
 
+    - name: Select formulae supported by this Mac architecture
+      ansible.builtin.set_fact:
+        homebrew_formulae_for_current_architecture: >-
+          {{ homebrew_formulae | reject('in', homebrew_formulae_unsupported_on_intel) | list
+             if ansible_facts.architecture == 'x86_64' else homebrew_formulae }}
+
   tasks:
     - name: Add required Homebrew taps
       community.general.homebrew_tap:
@@ -45,7 +51,7 @@
 
     - name: Install current core and SRE formulae
       community.general.homebrew:
-        name: "{{ homebrew_formulae }}"
+        name: "{{ homebrew_formulae_for_current_architecture }}"
         state: present
         update_homebrew: true
 

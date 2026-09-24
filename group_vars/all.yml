@@ -63,6 +63,10 @@ homebrew_casks:
 
 homebrew_formulae: "{{ homebrew_formulae_core + homebrew_formulae_sre }}"
 
+# Homebrew's podman formula requires arm64 as of September 2026.
+homebrew_formulae_unsupported_on_intel:
+  - podman
+
 bash_it_repository: https://github.com/Bash-it/bash-it.git
 bash_it_path: "{{ ansible_env.HOME }}/.bash_it"
 

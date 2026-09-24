@@ -26,7 +26,9 @@ playbook then installs the following current Homebrew packages.
 ### SRE, cloud, and infrastructure tools
 
 - `argocd`, `aws-iam-authenticator`, `eksctl`, `helm`, `herdr`, `packer`,
-  `podman`, `sops`, `vault`
+  `sops`, `vault`
+- `podman` on Apple Silicon only; Homebrew currently requires arm64 for its
+  Podman formula
 - Kubernetes: `kubernetes-cli` (`kubectl`), `kustomize`, `kubectx`, `kubent`,
   `kubeconform`
 - Terraform: `terraform`, `terraform-docs`, `terraformer`, `terragrunt`,
@@ -161,9 +163,10 @@ or reset during reruns.
 ## Podman on macOS
 
 Podman on macOS runs Linux containers in a managed virtual machine. The
-playbook installs the CLI but deliberately does not create or start a VM, since
-that is local runtime state with user-selected resource limits. Initialize it
-after provisioning:
+playbook installs its CLI on Apple Silicon but deliberately does not create or
+start a VM, since that is local runtime state with user-selected resource
+limits. Homebrew does not support installing Podman on Intel Macs. On Apple
+Silicon, initialize it after provisioning:
 
 ```bash
 podman machine init
