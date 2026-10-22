@@ -45,7 +45,6 @@ homebrew_formulae_sre:
   - terraform
   - terraform-docs
   - terraform-ls
-  - terraformer
   - terragrunt
   - tfenv
   - vault

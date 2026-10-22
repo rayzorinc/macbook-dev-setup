@@ -27,12 +27,12 @@ playbook then installs the following current Homebrew packages.
 
 - `argocd`, `aws-iam-authenticator`, `eksctl`, `helm`, `herdr`, `packer`,
   `sops`, `vault`
-- `podman` on Apple Silicon only; Homebrew currently requires arm64 for its
-  Podman formula
+- `podman`: the latest Homebrew release on Apple Silicon; upstream Podman
+  5.8.7 on Intel
 - Kubernetes: `kubernetes-cli` (`kubectl`), `kustomize`, `kubectx`, `kubent`,
   `kubeconform`
-- Terraform: `terraform`, `terraform-docs`, `terraformer`, `terragrunt`,
-  `terraform-ls`, `tfenv`
+- Terraform: `terraform`, `terraform-docs`, `terragrunt`, `terraform-ls`,
+  `tfenv`
 - Fastly CLI: `fastly/tap/fastly`
 - HTTP load testing: `vegeta`, `wrk`
 
@@ -162,11 +162,14 @@ or reset during reruns.
 
 ## Podman on macOS
 
-Podman on macOS runs Linux containers in a managed virtual machine. The
-playbook installs its CLI on Apple Silicon but deliberately does not create or
-start a VM, since that is local runtime state with user-selected resource
-limits. Homebrew does not support installing Podman on Intel Macs. On Apple
-Silicon, initialize it after provisioning:
+Podman on macOS runs Linux containers in a managed virtual machine. Apple
+Silicon Macs receive the latest Homebrew formula. Intel Macs receive the
+upstream 5.8.7 Intel installer because newer Podman releases no longer support
+Intel macOS. Bootstrap verifies the installer checksum and executable
+architecture of the Intel Podman and Apple Hypervisor components, and makes
+`/opt/podman/bin` available in future terminal sessions. It deliberately does
+not create or start a VM, since that is local runtime state with user-selected
+resource limits. Initialize it after provisioning:
 
 ```bash
 podman machine init

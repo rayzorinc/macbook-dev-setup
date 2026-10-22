@@ -32,6 +32,9 @@ xcodes_release_url="https://github.com/XcodesOrg/xcodes/releases/download/${xcod
 xcodes_release_sha256="f1519afe934a513e85dd9b32fc872394becbbb6a41db15d9ac3926a09a891888"
 xcode_intel_download_url="https://developer.apple.com/services-account/download?path=/Developer_Tools/Xcode_26.3/Xcode_26.3_Universal.xip"
 command_line_tools_download_url="https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_26.3/Command_Line_Tools_for_Xcode_26.3.dmg"
+podman_intel_version="5.8.7"
+podman_intel_package_url="https://github.com/podman-container-tools/podman/releases/download/v${podman_intel_version}/podman-installer-macos-amd64.pkg"
+podman_intel_package_sha256="a05640de459ce1a7ecb8ece4af107f64523e5fa9ecda78f01df11d606394b1e2"
 
 case "$(uname -m)" in
   arm64)
@@ -210,6 +213,73 @@ install_xcode() {
   sudo xcodebuild -runFirstLaunch
 }
 
+verify_intel_podman_architecture() {
+  local executable
+  local architectures
+
+  # Intel machines use the Apple Hypervisor provider, which needs vfkit and
+  # gvproxy. The upstream AMD64 package also contains an arm64-only krunkit
+  # binary for Apple Silicon's libkrun provider; it is not used on Intel.
+  for executable in \
+    /opt/podman/bin/podman \
+    /opt/podman/bin/podman-mac-helper \
+    /opt/podman/bin/vfkit \
+    /opt/podman/bin/gvproxy; do
+    if [[ ! -x "${executable}" ]]; then
+      echo "Podman installer did not install the expected executable: ${executable}" >&2
+      exit 1
+    fi
+
+    architectures="$(lipo -archs "${executable}")"
+    if [[ " ${architectures} " != *" x86_64 "* ]]; then
+      echo "${executable} is not an Intel x86_64 executable." >&2
+      echo "Remove the incompatible Podman installation, then rerun bootstrap." >&2
+      exit 1
+    fi
+  done
+}
+
+install_intel_podman() {
+  local installed_version=""
+  local podman_download_sha256
+  local podman_package
+  local podman_temp_directory
+
+  if [[ "$(uname -m)" != "x86_64" ]]; then
+    return 0
+  fi
+
+  # The upstream pkg installs Podman under /opt/podman rather than Homebrew's
+  # prefix. Make it available to the playbook and to the remainder of this run.
+  export PATH="/opt/podman/bin:${PATH}"
+
+  if [[ -x /opt/podman/bin/podman ]]; then
+    installed_version="$(/opt/podman/bin/podman --version | awk '{print $3}')"
+  fi
+
+  if [[ "${installed_version}" == "${podman_intel_version}" ]]; then
+    verify_intel_podman_architecture
+    echo "Podman ${podman_intel_version} for Intel macOS is already installed."
+    return 0
+  fi
+
+  echo "Installing Podman ${podman_intel_version} for Intel macOS from the official release package."
+  podman_temp_directory="$(mktemp -d -t podman-install)"
+  podman_package="${podman_temp_directory}/podman-installer-macos-amd64.pkg"
+  curl --fail --location --show-error --silent --output "${podman_package}" "${podman_intel_package_url}"
+  podman_download_sha256="$(shasum -a 256 "${podman_package}" | awk '{print $1}')"
+  if [[ "${podman_download_sha256}" != "${podman_intel_package_sha256}" ]]; then
+    echo "Downloaded Podman package failed its SHA-256 integrity check." >&2
+    rm -rf "${podman_temp_directory}"
+    exit 1
+  fi
+
+  sudo installer -pkg "${podman_package}" -target /
+  rm -rf "${podman_temp_directory}"
+  printf '%s\n' /opt/podman/bin | sudo tee /etc/paths.d/podman >/dev/null
+  verify_intel_podman_architecture
+}
+
 load_homebrew() {
   if [[ -x "${homebrew_bin}" ]]; then
     # Homebrew is not necessarily on PATH after a fresh installation. Its
@@ -264,6 +334,7 @@ fi
 
 brew update
 install_xcode
+install_intel_podman
 brew install ansible
 ansible-galaxy collection install -r requirements.yml
 ansible-playbook -i localhost, playbook.yml
